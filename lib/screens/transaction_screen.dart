@@ -1,9 +1,9 @@
-import 'dart:math';
-import 'package:expressed/models/transaction.dart';
+import 'package:expressed/models/transaction_data.dart';
 import 'package:expressed/screens/update_transaction_screen.dart';
 import 'package:expressed/widgets/chart.dart';
 import 'package:expressed/widgets/transaction_list.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class TransactionScreen extends StatefulWidget {
   @override
@@ -11,61 +11,25 @@ class TransactionScreen extends StatefulWidget {
 }
 
 class _TransactionScreenState extends State<TransactionScreen> {
-  List<Transaction> userTransactions = [
-    Transaction(id: '1', title: 'Shopping', amount: 32.5, dateTime: DateTime.now()),
-    Transaction(id: '2', title: 'Buy a Coffee', amount: 12.5, dateTime: DateTime.now()),
-  ];
+  bool _showChart = false;
 
-  List<Transaction> get _recentTransactions {
-    return userTransactions.where((tx) {
-      return tx.dateTime.isAfter(DateTime.now().subtract(Duration(days: 7)));
-    }).toList();
-  }
-
-  void _addUserTransaction(String title,double amount, DateTime selectedDate) {
-    final newTransation = Transaction(id: Random().nextInt(1000).toString() , title: title, amount: amount, dateTime: selectedDate);
-    setState(() {
-      userTransactions.add(newTransation);
-    });
-    Navigator.pop(context);
-  }
-
-  void _updateUserTransaction(String id, String title, double amount, DateTime selectedDate) {
-      setState(() {
-        for (var transaction in userTransactions) {
-          if (transaction.id == id) {
-            transaction.title = title;
-            transaction.amount = amount;
-            transaction.dateTime = selectedDate;
-            break;
-          }
-        }
-      }
-    );
-      Navigator.pop(context);
-  }
-
-  void _deleteUserTransaction(String id) {
-    print('Delete');
-    setState(() {
-      userTransactions.removeWhere((tx) => tx.id == id);
-    });
-
-  }
+  AppBar appBar = AppBar(
+    title: Text('Expressed'),
+  );
 
   @override
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final isLandscape = mediaQuery.orientation == Orientation.landscape;
+    final chartHeight = isLandscape ? 0.7 : 0.3;
+    if (!isLandscape) _showChart = true;
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Expressed'),
-      ),
+      appBar: appBar,
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
         onPressed: () {
-          showModalBottomSheet(context: context, builder: (context) => UpdateTransaction(
-            updateTransaction: _addUserTransaction,
-          ));
-          print('here');
+          showModalBottomSheet(context: context, builder: (context) => UpdateTransaction());
         },
       ),
       body: SafeArea(
@@ -73,13 +37,25 @@ class _TransactionScreenState extends State<TransactionScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Chart(_recentTransactions),
+              if(isLandscape) Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('Show Chart'),
+                  Switch(value: _showChart, onChanged: (value) {
+                    setState(() {
+                      _showChart = value;
+                    });
+                  })
+                ],
+              ),
+              if(_showChart)  Container(
+                  height:  (mediaQuery.size.height -
+                      appBar.preferredSize.height -
+                      mediaQuery.padding.top) *  chartHeight
+                  ,
+                  child: Chart(Provider.of<TransactionData>(context).recentTransactions)),
               Expanded(
-                child: TransactionList(
-                  transactions: userTransactions,
-                  deleteTransaction: _deleteUserTransaction,
-                  updateTransaction: _updateUserTransaction,
-                )
+                child: TransactionList()
               ),
             ],
           ),

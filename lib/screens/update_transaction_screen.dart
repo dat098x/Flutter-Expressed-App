@@ -1,13 +1,15 @@
+import 'package:expressed/models/transaction_data.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import '../models/transaction.dart';
 
 class UpdateTransaction extends StatefulWidget {
   String id;
   String title;
   double amount;
   DateTime date;
-  Function updateTransaction;
-  UpdateTransaction({this.id, this.updateTransaction, this.amount, this.title, this.date});
+  UpdateTransaction({this.id, this.amount, this.title, this.date});
 
   @override
   _UpdateTransactionState createState() => _UpdateTransactionState();
@@ -18,6 +20,7 @@ class _UpdateTransactionState extends State<UpdateTransaction> {
   TextEditingController amountController = TextEditingController();
   DateTime _selectedDate;
   bool isAdd;
+
   @override
   void initState() {
     // TODO: implement initState
@@ -32,14 +35,28 @@ class _UpdateTransactionState extends State<UpdateTransaction> {
   void submitData() {
     final enteredTitle = titleController.text;
     final enteredAmount = amountController.text == '' ? 0.0 : double.parse(amountController.text);
-    if ( isAdd) {
-      if (enteredTitle == null || enteredAmount <= 0 || _selectedDate == null ) {
-        return;
-      }
-      widget.updateTransaction(enteredTitle, enteredAmount, _selectedDate);
-    } else {
-      widget.updateTransaction(widget.id, enteredTitle, enteredAmount, _selectedDate);
+
+    if (enteredTitle == null || enteredAmount <= 0 || _selectedDate == null ) {
+      return null;
     }
+
+    if ( isAdd) {
+      final newTransaction = Transaction(
+          id: DateTime.now().toString(),
+          title: enteredTitle,
+          amount: enteredAmount,
+          dateTime: _selectedDate);
+      Provider.of<TransactionData>(context, listen: false).addTransaction(newTransaction);
+    } else {
+      final updateTransaction = Transaction(
+          id: widget.id,
+          title: enteredTitle,
+          amount: enteredAmount,
+          dateTime: _selectedDate);
+      Provider.of<TransactionData>(context, listen: false).updateTransaction(updateTransaction);
+    }
+
+    Navigator.pop(context);
   }
 
   void _presentDatePicker() {
@@ -59,9 +76,14 @@ class _UpdateTransactionState extends State<UpdateTransaction> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(20),
-      child: SingleChildScrollView(
+    return SingleChildScrollView(
+      child: Container(
+        padding: EdgeInsets.only(
+          top: 10,
+          right: 10,
+          left: 10,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 10
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [

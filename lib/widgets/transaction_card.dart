@@ -8,10 +8,9 @@ class TransactionCard extends StatelessWidget {
   final String title;
   final double amount;
   final DateTime dateTime;
-  final Function deleteTransaction;
-  final Function updateTransaction;
+  final Function deleteTransactionCallback;
 
-  TransactionCard({this.id, this.title, this.amount, this.dateTime, this.deleteTransaction, this.updateTransaction});
+  TransactionCard({this.id, this.title, this.amount, this.dateTime, this.deleteTransactionCallback});
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +27,6 @@ class TransactionCard extends StatelessWidget {
               title: title,
               amount: amount,
               date: dateTime,
-              updateTransaction: updateTransaction,
             );
           });
         },
@@ -54,10 +52,21 @@ class TransactionCard extends StatelessWidget {
             ),
           ),
           subtitle: Text(DateFormat.yMMMd().format(dateTime)),
-          trailing: IconButton(
-              icon: Icon(Icons.delete),
-              color: Colors.redAccent,
-              onPressed: () => deleteTransaction(id),
+          trailing: MediaQuery.of((context)).size.width > 460 ?
+                TextButton.icon(
+                    onPressed: deleteTransactionCallback,
+                    icon: Icon(Icons.delete, color: Colors.redAccent,),
+                    label: Text('Delete',
+                      style: TextStyle(
+                        color: Colors.redAccent,
+                        fontSize: 18
+                      ),
+                    ),
+                )
+              : IconButton(
+                    icon: Icon(Icons.delete),
+                    color: Colors.redAccent,
+                    onPressed: deleteTransactionCallback,
           )
         ),
       ),

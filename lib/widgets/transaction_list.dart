@@ -1,29 +1,32 @@
 import 'package:expressed/models/transaction.dart';
+import 'package:expressed/models/transaction_data.dart';
 import 'package:expressed/widgets/transaction_card.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 class TransactionList extends StatelessWidget {
-  final List<Transaction> transactions;
-  final Function deleteTransaction;
-  final Function updateTransaction;
-  TransactionList({this.transactions, this.deleteTransaction, this.updateTransaction});
-
   @override
   Widget build(BuildContext context) {
-    return Container(
-        padding: EdgeInsets.all(20),
-        child: transactions.isEmpty ? Text("No transaction!") :
+    return Consumer<TransactionData>(
+      builder: (context, transactionData, index) {
+          return Container(
+            padding: EdgeInsets.all(20),
+            child: transactionData.isEmty ? Text("No transaction!") :
             ListView.builder(
-              itemCount: transactions.length,
+                itemCount: transactionData.transactionLength,
                 itemBuilder: (context, index) {
+                  final transaction = transactionData.transactions[index];
                   return  TransactionCard(
-                    title: transactions[index].title,
-                    amount: transactions[index].amount,
-                    dateTime: transactions[index].dateTime,
-                    id: transactions[index].id,
-                    deleteTransaction: deleteTransaction,
-                    updateTransaction: updateTransaction,
+                    title: transaction.title,
+                    amount: transaction.amount,
+                    dateTime: transaction.dateTime,
+                    id: transaction.id,
+                    deleteTransactionCallback: () {
+                        transactionData.deleteTransaction(transaction);
+                    },
                   );
-              }),
+                }),
+          );
+      },
     );
   }
 }
